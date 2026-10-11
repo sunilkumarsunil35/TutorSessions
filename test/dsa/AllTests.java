@@ -19,6 +19,22 @@ public final class AllTests {
         c.suite("backtracking", () -> BacktrackingTest.run(c));
         c.suite("dynamic programming", () -> DynamicProgrammingTest.run(c));
         c.suite("greedy and intervals", () -> GreedyTest.run(c));
+        c.suite("sorting practice", () -> SortingPracticeTest.run(c));
+        c.suite("arrays practice", () -> ArraysPracticeTest.run(c));
+        c.suite("strings practice", () -> StringsPracticeTest.run(c));
+        c.suite("hashing practice", () -> HashingPracticeTest.run(c));
+        c.suite("two pointers practice", () -> TwoPointersPracticeTest.run(c));
+        c.suite("sliding window practice", () -> SlidingWindowPracticeTest.run(c));
+        c.suite("binary search practice", () -> BinarySearchPracticeTest.run(c));
+        c.suite("stacks practice", () -> StacksPracticeTest.run(c));
+        c.suite("linked lists practice", () -> LinkedListPracticeTest.run(c));
+        c.suite("trees and tries practice", () -> TreesPracticeTest.run(c));
+        c.suite("heaps practice", () -> HeapsPracticeTest.run(c));
+        c.suite("graphs practice", () -> GraphsPracticeTest.run(c));
+        c.suite("backtracking practice", () -> BacktrackingPracticeTest.run(c));
+        c.suite("dynamic programming practice", () -> DynamicProgrammingPracticeTest.run(c));
+        c.suite("greedy and intervals practice", () -> GreedyPracticeTest.run(c));
+        c.suite("math and bits", () -> BitsTest.run(c));
         System.out.println(c.summary());
         if (c.failed() > 0) {
             System.exit(1);

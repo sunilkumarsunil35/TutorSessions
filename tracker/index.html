@@ -334,7 +334,7 @@ details.add summary { cursor: pointer; font-weight: 600; color: var(--accent); }
       [56, "Merge Intervals", "M", "merge-intervals"], [435, "Non-overlapping Intervals", "M", "non-overlapping-intervals"]]],
     ["bits", "Math and bits", null, []],
   ];
-  // More practice problems with no solution in the repo yet: [LC number, title, difficulty, LeetCode slug]
+  // More practice problems: [LC number, title, difficulty, LeetCode slug]
   const EXTRA = {
     sorting: [
       [88, "Merge Sorted Array", "E", "merge-sorted-array"], [179, "Largest Number", "M", "largest-number"],
@@ -441,6 +441,20 @@ details.add summary { cursor: pointer; font-weight: 600; color: var(--accent); }
       [7, "Reverse Integer", "M", "reverse-integer"], [50, "Pow(x, n)", "M", "powx-n"],
       [204, "Count Primes", "M", "count-primes"], [371, "Sum of Two Integers", "M", "sum-of-two-integers"]],
   };
+  // Where the solutions to the practice problems live
+  const PRACTICE_FILE = {
+    sorting: "sorting/SortingPractice.java", arrays: "arrays/ArrayPractice.java", strings: "strings/StringPractice.java",
+    hashing: "hashing/HashingPractice.java", twopointers: "twopointers/TwoPointerPractice.java",
+    slidingwindow: "slidingwindow/SlidingWindowPractice.java", binarysearch: "binarysearch/BinarySearchPractice.java",
+    stacks: "stacks/StackPractice.java", linkedlist: "linkedlist/LinkedListPractice.java", trees: "trees/TreePractice.java",
+    heaps: "heaps/HeapPractice.java", graphs: "graphs/GraphPractice.java", backtracking: "backtracking/BacktrackingPractice.java",
+    dp: "dp/DynamicProgrammingPractice.java", greedy: "greedy/GreedyPractice.java", bits: "bits/BitProblems.java",
+  };
+  const OWN_FILE = {
+    380: "hashing/RandomizedSet.java", 981: "binarysearch/TimeMap.java", 232: "stacks/MyQueue.java",
+    146: "linkedlist/LRUCache.java", 297: "trees/Codec.java", 211: "trees/WordDictionary.java",
+    703: "heaps/KthLargest.java", 355: "heaps/Twitter.java",
+  };
   // LeetCode Premium problems (locked without a subscription)
   const PREMIUM = new Set([252, 253, 261, 269, 271, 323]);
 
@@ -474,7 +488,7 @@ details.add summary { cursor: pointer; font-weight: 600; color: var(--accent); }
       BASE.push({
         id: topic + "-" + slug(title), topic, title, diff, lc,
         url: "https://leetcode.com/problems/" + lcSlug + "/",
-        solution: null, premium: PREMIUM.has(lc),
+        solution: REPO + (OWN_FILE[lc] || PRACTICE_FILE[topic]), premium: PREMIUM.has(lc),
       });
     }
   }
