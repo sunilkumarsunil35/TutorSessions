@@ -149,6 +149,7 @@ Rough limits for a 1-second judge (about 10⁸ simple operations):
 
 ## Progress tracker
 
-`tracker/index.html` is a progress tracker for every problem above. You can open it on a phone or a
+`tracker/index.html` is a progress tracker for 214 problems: every problem above plus about 145 more
+practice problems, including a Math and bits topic. You can open it on a phone or a
 computer. Mark each problem To do, Attempted, Solved or Revise, write notes, and see your roadmap
 week, streak and topic progress.

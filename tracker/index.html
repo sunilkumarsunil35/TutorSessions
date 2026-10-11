@@ -189,7 +189,7 @@ details.add summary { cursor: pointer; font-weight: 600; color: var(--accent); }
   <header class="top">
     <div>
       <h1>Tutor<span>Sessions</span></h1>
-      <p>DSA tracker · 8-week Java interview plan · <span id="total-count" class="mono">69</span> problems</p>
+      <p>DSA tracker · 8-week Java interview plan · <span id="total-count" class="mono">214</span> problems</p>
     </div>
     <span class="sync" id="sync" data-state="loading" role="status">Connecting…</span>
   </header>
@@ -198,13 +198,13 @@ details.add summary { cursor: pointer; font-weight: 600; color: var(--accent); }
     <aside class="rail">
       <section class="panel" aria-labelledby="sum-h">
         <h2 id="sum-h" class="label">Progress</h2>
-        <div class="score"><b class="mono" id="done">0</b><span>of <span id="total" class="mono">69</span> solved</span></div>
+        <div class="score"><b class="mono" id="done">0</b><span>of <span id="total" class="mono">214</span> solved</span></div>
         <div class="stack" id="stack" aria-hidden="true"></div>
         <div class="legend">
           <span style="--c: var(--ok)">Solved <b class="mono" id="n-solved">0</b></span>
           <span style="--c: var(--rev)">Revise <b class="mono" id="n-revise">0</b></span>
           <span style="--c: var(--att)">Attempted <b class="mono" id="n-attempted">0</b></span>
-          <span style="--c: var(--todo)">To do <b class="mono" id="n-todo">69</b></span>
+          <span style="--c: var(--todo)">To do <b class="mono" id="n-todo">214</b></span>
         </div>
         <div class="stats">
           <div class="stat"><b id="streak">0</b><span>day streak</span></div>
@@ -332,7 +332,118 @@ details.add summary { cursor: pointer; font-weight: 600; color: var(--accent); }
     ["greedy", "Greedy and intervals", "greedy/GreedyProblems.java", [
       [55, "Jump Game", "M", "jump-game"], [45, "Jump Game II", "M", "jump-game-ii"],
       [56, "Merge Intervals", "M", "merge-intervals"], [435, "Non-overlapping Intervals", "M", "non-overlapping-intervals"]]],
+    ["bits", "Math and bits", null, []],
   ];
+  // More practice problems with no solution in the repo yet: [LC number, title, difficulty, LeetCode slug]
+  const EXTRA = {
+    sorting: [
+      [88, "Merge Sorted Array", "E", "merge-sorted-array"], [179, "Largest Number", "M", "largest-number"],
+      [274, "H-Index", "M", "h-index"], [147, "Insertion Sort List", "M", "insertion-sort-list"]],
+    arrays: [
+      [169, "Majority Element", "E", "majority-element"], [48, "Rotate Image", "M", "rotate-image"],
+      [54, "Spiral Matrix", "M", "spiral-matrix"], [73, "Set Matrix Zeroes", "M", "set-matrix-zeroes"],
+      [31, "Next Permutation", "M", "next-permutation"], [41, "First Missing Positive", "H", "first-missing-positive"]],
+    strings: [
+      [647, "Palindromic Substrings", "M", "palindromic-substrings"], [271, "Encode and Decode Strings", "M", "encode-and-decode-strings"],
+      [8, "String to Integer (atoi)", "M", "string-to-integer-atoi"], [6, "Zigzag Conversion", "M", "zigzag-conversion"],
+      [43, "Multiply Strings", "M", "multiply-strings"]],
+    hashing: [
+      [217, "Contains Duplicate", "E", "contains-duplicate"], [36, "Valid Sudoku", "M", "valid-sudoku"],
+      [383, "Ransom Note", "E", "ransom-note"], [205, "Isomorphic Strings", "E", "isomorphic-strings"],
+      [290, "Word Pattern", "E", "word-pattern"], [380, "Insert Delete GetRandom O(1)", "M", "insert-delete-getrandom-o1"]],
+    twopointers: [
+      [167, "Two Sum II - Input Array Is Sorted", "M", "two-sum-ii-input-array-is-sorted"], [283, "Move Zeroes", "E", "move-zeroes"],
+      [977, "Squares of a Sorted Array", "E", "squares-of-a-sorted-array"], [16, "3Sum Closest", "M", "3sum-closest"],
+      [18, "4Sum", "M", "4sum"], [680, "Valid Palindrome II", "E", "valid-palindrome-ii"]],
+    slidingwindow: [
+      [643, "Maximum Average Subarray I", "E", "maximum-average-subarray-i"],
+      [424, "Longest Repeating Character Replacement", "M", "longest-repeating-character-replacement"],
+      [567, "Permutation in String", "M", "permutation-in-string"], [438, "Find All Anagrams in a String", "M", "find-all-anagrams-in-a-string"],
+      [1004, "Max Consecutive Ones III", "M", "max-consecutive-ones-iii"], [904, "Fruit Into Baskets", "M", "fruit-into-baskets"]],
+    binarysearch: [
+      [35, "Search Insert Position", "E", "search-insert-position"], [69, "Sqrt(x)", "E", "sqrtx"],
+      [74, "Search a 2D Matrix", "M", "search-a-2d-matrix"], [153, "Find Minimum in Rotated Sorted Array", "M", "find-minimum-in-rotated-sorted-array"],
+      [162, "Find Peak Element", "M", "find-peak-element"], [981, "Time Based Key-Value Store", "M", "time-based-key-value-store"],
+      [1011, "Capacity To Ship Packages Within D Days", "M", "capacity-to-ship-packages-within-d-days"],
+      [4, "Median of Two Sorted Arrays", "H", "median-of-two-sorted-arrays"]],
+    stacks: [
+      [232, "Implement Queue using Stacks", "E", "implement-queue-using-stacks"], [496, "Next Greater Element I", "E", "next-greater-element-i"],
+      [503, "Next Greater Element II", "M", "next-greater-element-ii"], [853, "Car Fleet", "M", "car-fleet"],
+      [394, "Decode String", "M", "decode-string"], [71, "Simplify Path", "M", "simplify-path"],
+      [227, "Basic Calculator II", "M", "basic-calculator-ii"]],
+    linkedlist: [
+      [160, "Intersection of Two Linked Lists", "E", "intersection-of-two-linked-lists"], [234, "Palindrome Linked List", "E", "palindrome-linked-list"],
+      [142, "Linked List Cycle II", "M", "linked-list-cycle-ii"], [2, "Add Two Numbers", "M", "add-two-numbers"],
+      [143, "Reorder List", "M", "reorder-list"], [138, "Copy List with Random Pointer", "M", "copy-list-with-random-pointer"],
+      [287, "Find the Duplicate Number", "M", "find-the-duplicate-number"], [146, "LRU Cache", "M", "lru-cache"],
+      [25, "Reverse Nodes in k-Group", "H", "reverse-nodes-in-k-group"]],
+    trees: [
+      [226, "Invert Binary Tree", "E", "invert-binary-tree"], [100, "Same Tree", "E", "same-tree"],
+      [543, "Diameter of Binary Tree", "E", "diameter-of-binary-tree"], [110, "Balanced Binary Tree", "E", "balanced-binary-tree"],
+      [572, "Subtree of Another Tree", "E", "subtree-of-another-tree"], [112, "Path Sum", "E", "path-sum"],
+      [235, "Lowest Common Ancestor of a BST", "M", "lowest-common-ancestor-of-a-binary-search-tree"],
+      [199, "Binary Tree Right Side View", "M", "binary-tree-right-side-view"],
+      [1448, "Count Good Nodes in Binary Tree", "M", "count-good-nodes-in-binary-tree"],
+      [230, "Kth Smallest Element in a BST", "M", "kth-smallest-element-in-a-bst"],
+      [105, "Construct Binary Tree from Preorder and Inorder", "M", "construct-binary-tree-from-preorder-and-inorder-traversal"],
+      [211, "Design Add and Search Words", "M", "design-add-and-search-words-data-structure"],
+      [124, "Binary Tree Maximum Path Sum", "H", "binary-tree-maximum-path-sum"],
+      [297, "Serialize and Deserialize Binary Tree", "H", "serialize-and-deserialize-binary-tree"],
+      [212, "Word Search II", "H", "word-search-ii"]],
+    heaps: [
+      [703, "Kth Largest Element in a Stream", "E", "kth-largest-element-in-a-stream"], [1046, "Last Stone Weight", "E", "last-stone-weight"],
+      [973, "K Closest Points to Origin", "M", "k-closest-points-to-origin"], [621, "Task Scheduler", "M", "task-scheduler"],
+      [767, "Reorganize String", "M", "reorganize-string"],
+      [378, "Kth Smallest Element in a Sorted Matrix", "M", "kth-smallest-element-in-a-sorted-matrix"],
+      [355, "Design Twitter", "M", "design-twitter"]],
+    graphs: [
+      [695, "Max Area of Island", "M", "max-area-of-island"], [547, "Number of Provinces", "M", "number-of-provinces"],
+      [133, "Clone Graph", "M", "clone-graph"], [994, "Rotting Oranges", "M", "rotting-oranges"],
+      [417, "Pacific Atlantic Water Flow", "M", "pacific-atlantic-water-flow"], [130, "Surrounded Regions", "M", "surrounded-regions"],
+      [210, "Course Schedule II", "M", "course-schedule-ii"], [261, "Graph Valid Tree", "M", "graph-valid-tree"],
+      [684, "Redundant Connection", "M", "redundant-connection"],
+      [1584, "Min Cost to Connect All Points", "M", "min-cost-to-connect-all-points"],
+      [787, "Cheapest Flights Within K Stops", "M", "cheapest-flights-within-k-stops"],
+      [127, "Word Ladder", "H", "word-ladder"], [778, "Swim in Rising Water", "H", "swim-in-rising-water"],
+      [332, "Reconstruct Itinerary", "H", "reconstruct-itinerary"], [269, "Alien Dictionary", "H", "alien-dictionary"]],
+    backtracking: [
+      [77, "Combinations", "M", "combinations"], [90, "Subsets II", "M", "subsets-ii"],
+      [40, "Combination Sum II", "M", "combination-sum-ii"], [47, "Permutations II", "M", "permutations-ii"],
+      [22, "Generate Parentheses", "M", "generate-parentheses"],
+      [17, "Letter Combinations of a Phone Number", "M", "letter-combinations-of-a-phone-number"],
+      [79, "Word Search", "M", "word-search"], [131, "Palindrome Partitioning", "M", "palindrome-partitioning"],
+      [51, "N-Queens", "H", "n-queens"], [37, "Sudoku Solver", "H", "sudoku-solver"]],
+    dp: [
+      [746, "Min Cost Climbing Stairs", "E", "min-cost-climbing-stairs"], [213, "House Robber II", "M", "house-robber-ii"],
+      [64, "Minimum Path Sum", "M", "minimum-path-sum"], [5, "Longest Palindromic Substring", "M", "longest-palindromic-substring"],
+      [91, "Decode Ways", "M", "decode-ways"], [152, "Maximum Product Subarray", "M", "maximum-product-subarray"],
+      [139, "Word Break", "M", "word-break"], [279, "Perfect Squares", "M", "perfect-squares"],
+      [221, "Maximal Square", "M", "maximal-square"], [416, "Partition Equal Subset Sum", "M", "partition-equal-subset-sum"],
+      [518, "Coin Change II", "M", "coin-change-ii"], [494, "Target Sum", "M", "target-sum"],
+      [309, "Best Time to Buy and Sell Stock with Cooldown", "M", "best-time-to-buy-and-sell-stock-with-cooldown"],
+      [97, "Interleaving String", "M", "interleaving-string"],
+      [329, "Longest Increasing Path in a Matrix", "H", "longest-increasing-path-in-a-matrix"],
+      [115, "Distinct Subsequences", "H", "distinct-subsequences"], [312, "Burst Balloons", "H", "burst-balloons"],
+      [10, "Regular Expression Matching", "H", "regular-expression-matching"]],
+    greedy: [
+      [252, "Meeting Rooms", "E", "meeting-rooms"], [134, "Gas Station", "M", "gas-station"],
+      [846, "Hand of Straights", "M", "hand-of-straights"], [763, "Partition Labels", "M", "partition-labels"],
+      [678, "Valid Parenthesis String", "M", "valid-parenthesis-string"],
+      [1899, "Merge Triplets to Form Target Triplet", "M", "merge-triplets-to-form-target-triplet"],
+      [57, "Insert Interval", "M", "insert-interval"], [253, "Meeting Rooms II", "M", "meeting-rooms-ii"],
+      [452, "Minimum Number of Arrows to Burst Balloons", "M", "minimum-number-of-arrows-to-burst-balloons"],
+      [135, "Candy", "H", "candy"], [1851, "Minimum Interval to Include Each Query", "H", "minimum-interval-to-include-each-query"]],
+    bits: [
+      [136, "Single Number", "E", "single-number"], [191, "Number of 1 Bits", "E", "number-of-1-bits"],
+      [338, "Counting Bits", "E", "counting-bits"], [190, "Reverse Bits", "E", "reverse-bits"],
+      [268, "Missing Number", "E", "missing-number"], [9, "Palindrome Number", "E", "palindrome-number"],
+      [66, "Plus One", "E", "plus-one"], [202, "Happy Number", "E", "happy-number"],
+      [7, "Reverse Integer", "M", "reverse-integer"], [50, "Pow(x, n)", "M", "powx-n"],
+      [204, "Count Primes", "M", "count-primes"], [371, "Sum of Two Integers", "M", "sum-of-two-integers"]],
+  };
+  // LeetCode Premium problems (locked without a subscription)
+  const PREMIUM = new Set([252, 253, 261, 269, 271, 323]);
+
   const WEEKS = [
     ["Arrays, strings, sorting", ["sorting", "arrays", "strings"]],
     ["Hashing, two pointers", ["hashing", "twopointers"]],
@@ -340,7 +451,7 @@ details.add summary { cursor: pointer; font-weight: 600; color: var(--accent); }
     ["Stacks, linked lists", ["stacks", "linkedlist"]],
     ["Trees and tries", ["trees"]],
     ["Heaps and graphs", ["heaps", "graphs"]],
-    ["Backtracking, greedy", ["backtracking", "greedy"]],
+    ["Backtracking, greedy, bits", ["backtracking", "greedy", "bits"]],
     ["Dynamic programming", ["dp"]],
   ];
 
@@ -357,6 +468,13 @@ details.add summary { cursor: pointer; font-weight: 600; color: var(--accent); }
         id: topic + "-" + slug(title), topic, title, diff, lc,
         url: lcSlug ? "https://leetcode.com/problems/" + lcSlug + "/" : null,
         solution: REPO + (own || file),
+      });
+    }
+    for (const [lc, title, diff, lcSlug] of EXTRA[topic] || []) {
+      BASE.push({
+        id: topic + "-" + slug(title), topic, title, diff, lc,
+        url: "https://leetcode.com/problems/" + lcSlug + "/",
+        solution: null, premium: PREMIUM.has(lc),
       });
     }
   }
@@ -633,7 +751,7 @@ details.add summary { cursor: pointer; font-weight: 600; color: var(--accent); }
       <select class="status" data-s="${s}" aria-label="Status of ${esc(p.title)}" ${ro ? "disabled" : ""}>${opts}</select>
       <div>
         <div class="title">${esc(p.title)}</div>
-        <div class="meta">${p.lc ? `<span class="mono">LC ${esc(p.lc)}</span>` : ""}<span class="diff" data-d="${p.diff}">${DIFFS[p.diff]}</span>${r.solvedOn && isDone(s) ? `<span>solved ${esc(r.solvedOn)}</span>` : ""}${p.custom ? "<span>added by you</span>" : ""}</div>
+        <div class="meta">${p.lc ? `<span class="mono">LC ${esc(p.lc)}</span>` : ""}<span class="diff" data-d="${p.diff}">${DIFFS[p.diff]}</span>${r.solvedOn && isDone(s) ? `<span>solved ${esc(r.solvedOn)}</span>` : ""}${p.premium ? "<span>Premium</span>" : ""}${p.custom ? "<span>added by you</span>" : ""}</div>
       </div>
       <div class="acts">
         ${p.url ? `<a class="act" href="${esc(p.url)}" target="_blank" rel="noopener">LeetCode ↗</a>` : ""}
