@@ -1,0 +1,785 @@
+<title>TutorSessions DSA Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a study notebook. Summary rail (roadmap, topics, activity) sits beside the problem ledger on wide screens; one column on phones. */
+:root {
+  --bg: #f4f5f8;
+  --surface: #ffffff;
+  --ink: #161a26;
+  --muted: #5a6275;
+  --line: #dde1ea;
+  --accent: #2b4fc7;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3e9fb;
+  --todo: #7b8396;
+  --todo-soft: #eceef3;
+  --att: #a8690f;
+  --att-soft: #fbefd9;
+  --ok: #19804a;
+  --ok-soft: #daf2e4;
+  --rev: #6a43c4;
+  --rev-soft: #ebe4fb;
+  --hard: #c0392f;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10131b; --surface: #181c27; --ink: #e8eaf1; --muted: #9ba2b5; --line: #2a3041;
+    --accent: #8ea5ff; --accent-ink: #10131b; --accent-soft: #232c4f;
+    --todo: #7d8599; --todo-soft: #222736; --att: #e3a84c; --att-soft: #392c15;
+    --ok: #4fc684; --ok-soft: #163222; --rev: #b59dff; --rev-soft: #2b2445; --hard: #ff7d73;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10131b; --surface: #181c27; --ink: #e8eaf1; --muted: #9ba2b5; --line: #2a3041;
+  --accent: #8ea5ff; --accent-ink: #10131b; --accent-soft: #232c4f;
+  --todo: #7d8599; --todo-soft: #222736; --att: #e3a84c; --att-soft: #392c15;
+  --ok: #4fc684; --ok-soft: #163222; --rev: #b59dff; --rev-soft: #2b2445; --hard: #ff7d73;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { background: var(--bg); }
+body { color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+/* Header */
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+header.top h1 { font-size: clamp(28px, 6vw, 40px); font-weight: 800; letter-spacing: -.02em; line-height: 1; }
+header.top h1 span { color: var(--accent); }
+header.top p { margin: 6px 0 0; color: var(--muted); }
+.sync { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; background: var(--surface); }
+.sync::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--todo); }
+.sync[data-state="synced"]::before { background: var(--ok); }
+.sync[data-state="saving"]::before { background: var(--att); }
+.sync[data-state="local"]::before, .sync[data-state="readonly"]::before { background: var(--rev); }
+.sync[data-state="error"]::before { background: var(--hard); }
+
+.shell { display: grid; gap: 24px; }
+@media (min-width: 960px) {
+  .shell { grid-template-columns: 360px minmax(0, 1fr); align-items: start; }
+  .rail { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); max-height: calc(100vh - 32px); overflow-y: auto; padding-right: 4px; }
+}
+.rail { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.panel h2 { font-size: 17px; font-weight: 600; }
+
+/* Summary */
+.score { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.score b { font-family: var(--display); font-size: 48px; font-weight: 800; line-height: 1; letter-spacing: -.03em; }
+.score span { color: var(--muted); }
+.stack { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--todo-soft); }
+.stack i { display: block; height: 100%; transition: width .3s ease; }
+.stack .s-solved { background: var(--ok); }
+.stack .s-revise { background: var(--rev); }
+.stack .s-attempted { background: var(--att); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; background: var(--c); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { border-top: 1px solid var(--line); padding-top: 8px; }
+.stat b { display: block; font-family: var(--mono); font-size: 22px; font-weight: 600; }
+.stat span { font-size: 12px; color: var(--muted); }
+.next { border-radius: 8px; background: var(--accent-soft); padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+.next a { font-weight: 600; text-decoration: none; }
+.next a:hover { text-decoration: underline; }
+
+/* Roadmap */
+.weeks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.week { text-align: left; border: 1px solid var(--line); background: transparent; border-radius: 8px; padding: 8px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.week:hover { border-color: var(--accent); }
+.week[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.week .wk { font-family: var(--mono); font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+.week .wk em { font-style: normal; color: var(--ok); }
+.week .wt { font-size: 12px; line-height: 1.3; overflow-wrap: anywhere; }
+.week.current .wk { color: var(--accent); font-weight: 600; }
+.bar { height: 4px; border-radius: 999px; background: var(--todo-soft); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--ok); }
+
+/* Topics */
+.topics { display: flex; flex-direction: column; }
+.topic { display: grid; grid-template-columns: minmax(0, 1fr) 80px 44px; align-items: center; gap: 10px; padding: 7px 8px; margin: 0 -8px; border: 0; background: transparent; border-radius: 6px; cursor: pointer; text-align: left; }
+.topic:hover { background: var(--todo-soft); }
+.topic[aria-pressed="true"] { background: var(--accent-soft); }
+.topic .n { font-size: 12px; text-align: right; color: var(--muted); }
+
+/* Heatmap */
+.heat { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 1fr); gap: 3px; }
+.heat i { aspect-ratio: 1; border-radius: 2px; background: var(--todo-soft); max-width: 100%; }
+.heat i[data-l="1"] { background: color-mix(in srgb, var(--ok) 35%, var(--todo-soft)); }
+.heat i[data-l="2"] { background: color-mix(in srgb, var(--ok) 65%, var(--todo-soft)); }
+.heat i[data-l="3"] { background: var(--ok); }
+.heat i.today { outline: 1px solid var(--ink); outline-offset: 0; }
+.heat-foot { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+
+/* Ledger */
+.ledger { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.search { flex: 1 1 220px; min-width: 0; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.filter-note { font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.linkbtn { border: 0; background: none; color: var(--accent); cursor: pointer; padding: 0; text-decoration: underline; font-size: 13px; }
+
+.group { display: flex; flex-direction: column; }
+.group-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 0 4px 6px; border-bottom: 2px solid var(--ink); }
+.group-head h3 { font-size: 19px; font-weight: 600; }
+.group-head span { font-size: 13px; color: var(--muted); }
+.row { display: grid; grid-template-columns: 116px minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 10px 4px; border-bottom: 1px solid var(--line); }
+.row .title { font-weight: 500; overflow-wrap: anywhere; }
+.row[data-status="solved"] .title, .row[data-status="revise"] .title { color: var(--muted); }
+.meta { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+.diff { font-family: var(--mono); font-weight: 600; }
+.diff[data-d="E"] { color: var(--ok); }
+.diff[data-d="M"] { color: var(--att); }
+.diff[data-d="H"] { color: var(--hard); }
+.acts { display: flex; gap: 4px; align-items: center; }
+.act { border: 1px solid transparent; background: transparent; border-radius: 6px; padding: 4px 8px; font-size: 13px; color: var(--accent); text-decoration: none; cursor: pointer; white-space: nowrap; }
+.act:hover { border-color: var(--line); }
+.act.has-note { color: var(--rev); font-weight: 600; }
+.notes { grid-column: 2 / -1; }
+.notes textarea { width: 100%; min-height: 72px; resize: vertical; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--bg); font-size: 14px; }
+.notes .hint { font-size: 12px; color: var(--muted); }
+
+.status { appearance: none; -webkit-appearance: none; border: 1px solid transparent; border-radius: 999px; padding: 5px 26px 5px 12px; font-size: 13px; font-weight: 600; cursor: pointer; width: 100%;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 14px) 52%, calc(100% - 10px) 52%; background-size: 4px 4px; background-repeat: no-repeat; }
+.status[data-s="todo"] { background-color: var(--todo-soft); color: var(--todo); }
+.status[data-s="attempted"] { background-color: var(--att-soft); color: var(--att); }
+.status[data-s="solved"] { background-color: var(--ok-soft); color: var(--ok); }
+.status[data-s="revise"] { background-color: var(--rev-soft); color: var(--rev); }
+.status:disabled { cursor: default; opacity: .85; }
+.status option { background: var(--surface); color: var(--ink); }
+
+.empty { padding: 28px 4px; color: var(--muted); }
+
+@media (max-width: 640px) {
+  .row { grid-template-columns: 104px minmax(0, 1fr); }
+  .acts { grid-column: 2; margin-left: -8px; }
+  .notes { grid-column: 1 / -1; }
+}
+
+/* Add form */
+details.add { background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius); padding: 12px 16px; }
+details.add summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+.form { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 12px; }
+.form label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); min-width: 0; }
+.form input, .form select { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--bg); color: var(--ink); min-width: 0; }
+.form .wide { grid-column: 1 / -1; }
+.btn { border: 0; background: var(--accent); color: var(--accent-ink); border-radius: 8px; padding: 9px 16px; font-weight: 600; cursor: pointer; justify-self: start; }
+.err { color: var(--hard); font-size: 13px; }
+.danger { color: var(--hard); }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Tutor<span>Sessions</span></h1>
+      <p>DSA tracker · 8-week Java interview plan · <span id="total-count" class="mono">69</span> problems</p>
+    </div>
+    <span class="sync" id="sync" data-state="loading" role="status">Connecting…</span>
+  </header>
+
+  <div class="shell">
+    <aside class="rail">
+      <section class="panel" aria-labelledby="sum-h">
+        <h2 id="sum-h" class="label">Progress</h2>
+        <div class="score"><b class="mono" id="done">0</b><span>of <span id="total" class="mono">69</span> solved</span></div>
+        <div class="stack" id="stack" aria-hidden="true"></div>
+        <div class="legend">
+          <span style="--c: var(--ok)">Solved <b class="mono" id="n-solved">0</b></span>
+          <span style="--c: var(--rev)">Revise <b class="mono" id="n-revise">0</b></span>
+          <span style="--c: var(--att)">Attempted <b class="mono" id="n-attempted">0</b></span>
+          <span style="--c: var(--todo)">To do <b class="mono" id="n-todo">69</b></span>
+        </div>
+        <div class="stats">
+          <div class="stat"><b id="streak">0</b><span>day streak</span></div>
+          <div class="stat"><b id="week-solves">0</b><span>solved last 7 days</span></div>
+          <div class="stat"><b id="easy-med-hard">0·0·0</b><span>easy · med · hard</span></div>
+        </div>
+        <div class="next" id="next"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="road-h">
+        <h2 id="road-h" class="label">Roadmap</h2>
+        <div class="weeks" id="weeks"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="topic-h">
+        <h2 id="topic-h" class="label">Topics</h2>
+        <div class="topics" id="topics"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="heat-h">
+        <h2 id="heat-h" class="label">Problems solved, last 12 weeks</h2>
+        <div class="heat" id="heat" role="img" aria-label="Daily solved problems heatmap"></div>
+        <div class="heat-foot"><span id="heat-start"></span><span>Today</span></div>
+      </section>
+    </aside>
+
+    <main class="ledger">
+      <div class="toolbar">
+        <label for="q" class="label" hidden>Search problems</label>
+        <input id="q" class="search" type="search" placeholder="Search by name or LeetCode number" autocomplete="off">
+      </div>
+      <div class="toolbar">
+        <div class="chips" id="status-chips" role="group" aria-label="Filter by status"></div>
+        <div class="chips" id="diff-chips" role="group" aria-label="Filter by difficulty"></div>
+      </div>
+      <div class="filter-note" id="filter-note" hidden></div>
+      <div id="list"></div>
+
+      <details class="add" id="add">
+        <summary>Add your own problem</summary>
+        <form class="form" id="add-form" novalidate>
+          <label class="wide">Problem name
+            <input id="f-title" required maxlength="120" placeholder="e.g. Rotting Oranges">
+          </label>
+          <label>Topic
+            <select id="f-topic"></select>
+          </label>
+          <label>Difficulty
+            <select id="f-diff"><option value="E">Easy</option><option value="M" selected>Medium</option><option value="H">Hard</option></select>
+          </label>
+          <label>LeetCode number (optional)
+            <input id="f-lc" inputmode="numeric" maxlength="5" placeholder="994">
+          </label>
+          <label class="wide">Link (optional)
+            <input id="f-url" type="url" maxlength="300" placeholder="https://leetcode.com/problems/rotting-oranges/">
+          </label>
+          <button class="btn" type="submit">Add problem</button>
+          <span class="err wide" id="f-err" hidden></span>
+        </form>
+      </details>
+    </main>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const REPO = "https://github.com/sunilkumarsunil35/TutorSessions/blob/main/src/dsa/";
+  const STATUSES = [["todo", "To do"], ["attempted", "Attempted"], ["solved", "Solved"], ["revise", "Revise"]];
+  const DIFFS = { E: "Easy", M: "Medium", H: "Hard" };
+
+  // [topic id, display name, solution file, problems: [LC number|null, title, difficulty, LeetCode slug|null, file override?]]
+  const CATALOG = [
+    ["sorting", "Sorting", "sorting/Sorting.java", [
+      [912, "Merge sort", "M", "sort-an-array"], [912, "Quick sort", "M", "sort-an-array"],
+      [null, "Counting sort", "E", null], [75, "Sort Colors", "M", "sort-colors"]]],
+    ["arrays", "Arrays", "arrays/ArrayProblems.java", [
+      [53, "Maximum Subarray", "M", "maximum-subarray"], [121, "Best Time to Buy and Sell Stock", "E", "best-time-to-buy-and-sell-stock"],
+      [238, "Product of Array Except Self", "M", "product-of-array-except-self"], [189, "Rotate Array", "M", "rotate-array"]]],
+    ["strings", "Strings", "strings/StringProblems.java", [
+      [125, "Valid Palindrome", "E", "valid-palindrome"], [242, "Valid Anagram", "E", "valid-anagram"],
+      [14, "Longest Common Prefix", "E", "longest-common-prefix"], [151, "Reverse Words in a String", "M", "reverse-words-in-a-string"],
+      [28, "First Occurrence in a String (KMP)", "E", "find-the-index-of-the-first-occurrence-in-a-string"]]],
+    ["hashing", "Hashing", "hashing/HashingProblems.java", [
+      [1, "Two Sum", "E", "two-sum"], [49, "Group Anagrams", "M", "group-anagrams"],
+      [128, "Longest Consecutive Sequence", "M", "longest-consecutive-sequence"], [560, "Subarray Sum Equals K", "M", "subarray-sum-equals-k"]]],
+    ["twopointers", "Two pointers", "twopointers/TwoPointerProblems.java", [
+      [26, "Remove Duplicates from Sorted Array", "E", "remove-duplicates-from-sorted-array"], [15, "3Sum", "M", "3sum"],
+      [11, "Container With Most Water", "M", "container-with-most-water"], [42, "Trapping Rain Water", "H", "trapping-rain-water"]]],
+    ["slidingwindow", "Sliding window", "slidingwindow/SlidingWindowProblems.java", [
+      [3, "Longest Substring Without Repeating Characters", "M", "longest-substring-without-repeating-characters"],
+      [209, "Minimum Size Subarray Sum", "M", "minimum-size-subarray-sum"],
+      [76, "Minimum Window Substring", "H", "minimum-window-substring"], [239, "Sliding Window Maximum", "H", "sliding-window-maximum"]]],
+    ["binarysearch", "Binary search", "binarysearch/BinarySearchProblems.java", [
+      [704, "Binary Search", "E", "binary-search"], [34, "Find First and Last Position", "M", "find-first-and-last-position-of-element-in-sorted-array"],
+      [33, "Search in Rotated Sorted Array", "M", "search-in-rotated-sorted-array"], [875, "Koko Eating Bananas", "M", "koko-eating-bananas"]]],
+    ["stacks", "Stacks", "stacks/StackProblems.java", [
+      [20, "Valid Parentheses", "E", "valid-parentheses"], [150, "Evaluate Reverse Polish Notation", "M", "evaluate-reverse-polish-notation"],
+      [739, "Daily Temperatures", "M", "daily-temperatures"], [84, "Largest Rectangle in Histogram", "H", "largest-rectangle-in-histogram"],
+      [155, "Min Stack", "M", "min-stack", "stacks/MinStack.java"]]],
+    ["linkedlist", "Linked lists", "linkedlist/LinkedListProblems.java", [
+      [206, "Reverse Linked List", "E", "reverse-linked-list"], [21, "Merge Two Sorted Lists", "E", "merge-two-sorted-lists"],
+      [141, "Linked List Cycle", "E", "linked-list-cycle"], [876, "Middle of the Linked List", "E", "middle-of-the-linked-list"],
+      [19, "Remove Nth Node From End of List", "M", "remove-nth-node-from-end-of-list"]]],
+    ["trees", "Trees and tries", "trees/TreeProblems.java", [
+      [104, "Maximum Depth of Binary Tree", "E", "maximum-depth-of-binary-tree"], [94, "Binary Tree Inorder Traversal", "E", "binary-tree-inorder-traversal"],
+      [102, "Binary Tree Level Order Traversal", "M", "binary-tree-level-order-traversal"], [98, "Validate Binary Search Tree", "M", "validate-binary-search-tree"],
+      [236, "Lowest Common Ancestor of a Binary Tree", "M", "lowest-common-ancestor-of-a-binary-tree"],
+      [208, "Implement Trie (Prefix Tree)", "M", "implement-trie-prefix-tree", "trees/Trie.java"]]],
+    ["heaps", "Heaps", "heaps/HeapProblems.java", [
+      [215, "Kth Largest Element in an Array", "M", "kth-largest-element-in-an-array"], [347, "Top K Frequent Elements", "M", "top-k-frequent-elements"],
+      [23, "Merge k Sorted Lists", "H", "merge-k-sorted-lists"], [295, "Find Median from Data Stream", "H", "find-median-from-data-stream", "heaps/MedianFinder.java"]]],
+    ["graphs", "Graphs", "graphs/GraphProblems.java", [
+      [200, "Number of Islands", "M", "number-of-islands"], [207, "Course Schedule", "M", "course-schedule"],
+      [743, "Network Delay Time (Dijkstra)", "M", "network-delay-time"],
+      [323, "Connected Components (Union-Find)", "M", "number-of-connected-components-in-an-undirected-graph"]]],
+    ["backtracking", "Backtracking", "backtracking/BacktrackingProblems.java", [
+      [78, "Subsets", "M", "subsets"], [46, "Permutations", "M", "permutations"],
+      [39, "Combination Sum", "M", "combination-sum"], [52, "N-Queens II", "H", "n-queens-ii"]]],
+    ["dp", "Dynamic programming", "dp/DynamicProgramming.java", [
+      [70, "Climbing Stairs", "E", "climbing-stairs"], [198, "House Robber", "M", "house-robber"], [62, "Unique Paths", "M", "unique-paths"],
+      [322, "Coin Change", "M", "coin-change"], [300, "Longest Increasing Subsequence", "M", "longest-increasing-subsequence"],
+      [1143, "Longest Common Subsequence", "M", "longest-common-subsequence"], [72, "Edit Distance", "M", "edit-distance"],
+      [null, "0/1 Knapsack", "M", null]]],
+    ["greedy", "Greedy and intervals", "greedy/GreedyProblems.java", [
+      [55, "Jump Game", "M", "jump-game"], [45, "Jump Game II", "M", "jump-game-ii"],
+      [56, "Merge Intervals", "M", "merge-intervals"], [435, "Non-overlapping Intervals", "M", "non-overlapping-intervals"]]],
+  ];
+  const WEEKS = [
+    ["Arrays, strings, sorting", ["sorting", "arrays", "strings"]],
+    ["Hashing, two pointers", ["hashing", "twopointers"]],
+    ["Sliding window, binary search", ["slidingwindow", "binarysearch"]],
+    ["Stacks, linked lists", ["stacks", "linkedlist"]],
+    ["Trees and tries", ["trees"]],
+    ["Heaps and graphs", ["heaps", "graphs"]],
+    ["Backtracking, greedy", ["backtracking", "greedy"]],
+    ["Dynamic programming", ["dp"]],
+  ];
+
+  const TOPICS = CATALOG.map(([id, name, file]) => ({ id, name, file }));
+  const topicName = Object.fromEntries(TOPICS.map((t) => [t.id, t.name]));
+  const weekOf = {};
+  WEEKS.forEach(([, ts], i) => ts.forEach((t) => (weekOf[t] = i + 1)));
+
+  const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const BASE = [];
+  for (const [topic, , file, items] of CATALOG) {
+    for (const [lc, title, diff, lcSlug, own] of items) {
+      BASE.push({
+        id: topic + "-" + slug(title), topic, title, diff, lc,
+        url: lcSlug ? "https://leetcode.com/problems/" + lcSlug + "/" : null,
+        solution: REPO + (own || file),
+      });
+    }
+  }
+
+  // ---- state ----
+  let progress = {}; // id -> {status, notes, solvedOn, updatedAt}
+  let custom = {}; // docId -> {title, topic, diff, lc, url, createdAt}
+  let mode = "loading"; // loading | db | local | readonly
+  let db = null;
+  const filter = { q: "", status: "all", diff: "all", topics: null, label: "" };
+  const openNotes = new Set();
+  let listDirty = false;
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const pad = (n) => String(n).padStart(2, "0");
+  const dayKey = (d) => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  const today = () => dayKey(new Date());
+  const statusOf = (id) => (progress[id] && progress[id].status) || "todo";
+  const isDone = (s) => s === "solved" || s === "revise";
+
+  function allProblems() {
+    const extra = Object.entries(custom)
+      .filter(([, c]) => c && c.title && topicName[c.topic])
+      .sort((a, b) => (a[1].createdAt || 0) - (b[1].createdAt || 0))
+      .map(([docId, c]) => ({
+        id: "c-" + docId, docId, custom: true, topic: c.topic, title: c.title,
+        diff: DIFFS[c.diff] ? c.diff : "M", lc: c.lc || null,
+        url: /^https?:\/\//i.test(c.url || "") ? c.url : null, solution: null,
+      }));
+    return BASE.concat(extra);
+  }
+
+  // ---- sync status ----
+  function setSync(state, text) {
+    const el = $("sync");
+    el.dataset.state = state;
+    el.textContent = text;
+  }
+  let pendingWrites = 0;
+  function refreshSync() {
+    if (mode === "db") setSync(pendingWrites ? "saving" : "synced", pendingWrites ? "Saving…" : "Synced across your devices");
+    else if (mode === "local") setSync("local", "Saved on this device only");
+    else if (mode === "readonly") setSync("readonly", "View only");
+  }
+
+  // ---- storage ----
+  const LS_KEY = "tutorsessions-dsa-v1";
+  function loadLocal() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        progress = data.progress || {};
+        custom = data.custom || {};
+      }
+    } catch (e) { /* storage unavailable: start empty */ }
+  }
+  function saveLocal() {
+    try { localStorage.setItem(LS_KEY, JSON.stringify({ progress, custom })); } catch (e) { /* ignore */ }
+  }
+
+  const chains = {};
+  function queueWrite(key, fn) {
+    pendingWrites++;
+    refreshSync();
+    const run = async () => {
+      try { await fn(); }
+      catch (e) {
+        if (e && e.code === "unavailable") {
+          await new Promise((r) => setTimeout(r, 400 + Math.random() * 800));
+          try { await fn(); return; } catch (e2) { e = e2; }
+        }
+        handleWriteError(e);
+      } finally {
+        pendingWrites--;
+        refreshSync();
+      }
+    };
+    chains[key] = (chains[key] || Promise.resolve()).then(run);
+    return chains[key];
+  }
+  function handleWriteError(e) {
+    const code = e && e.code;
+    if (code === "invalid_argument" || code === "not_granted") {
+      mode = "readonly";
+      renderAll();
+    } else if (code === "quota_exceeded") {
+      setSync("error", "Storage is full. Remove some custom problems.");
+    } else {
+      setSync("error", "Couldn't save. Check your connection and try again.");
+    }
+  }
+
+  function writeProgress(id) {
+    if (mode === "local") return saveLocal();
+    if (mode !== "db") return;
+    const body = Object.assign({}, progress[id]);
+    queueWrite("p:" + id, () => db.collection("progress").doc(id).set(body));
+  }
+
+  // ---- actions ----
+  function setStatus(id, status) {
+    const cur = progress[id] || {};
+    const next = Object.assign({}, cur, { status, updatedAt: Date.now() });
+    if (isDone(status)) { if (!cur.solvedOn) next.solvedOn = today(); }
+    else delete next.solvedOn;
+    progress[id] = next;
+    writeProgress(id);
+    renderAll();
+  }
+
+  const noteTimers = {};
+  function setNotes(id, text, immediate) {
+    progress[id] = Object.assign({ status: "todo" }, progress[id], { notes: text.slice(0, 4000), updatedAt: Date.now() });
+    clearTimeout(noteTimers[id]);
+    if (immediate) writeProgress(id);
+    else noteTimers[id] = setTimeout(() => writeProgress(id), 800);
+  }
+
+  async function addCustom(data) {
+    const docId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    custom[docId] = data;
+    if (mode === "local") saveLocal();
+    else if (mode === "db") queueWrite("c:" + docId, () => db.collection("custom").doc(docId).set(data));
+    renderAll();
+  }
+
+  function removeCustom(docId) {
+    const pid = "c-" + docId;
+    delete custom[docId];
+    delete progress[pid];
+    openNotes.delete(pid);
+    if (mode === "local") saveLocal();
+    else if (mode === "db") {
+      queueWrite("c:" + docId, () => db.collection("custom").doc(docId).delete());
+      queueWrite("p:" + pid, () => db.collection("progress").doc(pid).delete());
+    }
+    renderAll();
+  }
+
+  // ---- rendering ----
+  function counts(list) {
+    const c = { todo: 0, attempted: 0, solved: 0, revise: 0 };
+    for (const p of list) c[statusOf(p.id)]++;
+    return c;
+  }
+
+  function renderSummary(all) {
+    const c = counts(all);
+    const total = all.length;
+    const done = c.solved + c.revise;
+    $("done").textContent = done;
+    $("total").textContent = total;
+    $("total-count").textContent = total;
+    for (const s of ["solved", "revise", "attempted", "todo"]) $("n-" + s).textContent = c[s];
+    $("stack").innerHTML = ["solved", "revise", "attempted"]
+      .map((s) => `<i class="s-${s}" style="width:${total ? (c[s] / total) * 100 : 0}%"></i>`).join("");
+
+    const byDiff = { E: 0, M: 0, H: 0 };
+    for (const p of all) if (isDone(statusOf(p.id))) byDiff[p.diff]++;
+    $("easy-med-hard").textContent = `${byDiff.E}·${byDiff.M}·${byDiff.H}`;
+
+    // solves per day
+    const perDay = {};
+    for (const p of all) {
+      const r = progress[p.id];
+      if (r && isDone(r.status) && r.solvedOn) perDay[r.solvedOn] = (perDay[r.solvedOn] || 0) + 1;
+    }
+    const d = new Date();
+    if (!perDay[dayKey(d)]) d.setDate(d.getDate() - 1); // streak survives until today ends
+    let streak = 0;
+    while (perDay[dayKey(d)]) { streak++; d.setDate(d.getDate() - 1); }
+    $("streak").textContent = streak;
+    let last7 = 0;
+    const w = new Date();
+    for (let i = 0; i < 7; i++) { last7 += perDay[dayKey(w)] || 0; w.setDate(w.getDate() - 1); }
+    $("week-solves").textContent = last7;
+    renderHeat(perDay);
+
+    // next up: first unsolved problem in the earliest unfinished week
+    let cur = WEEKS.length;
+    for (let i = 0; i < WEEKS.length; i++) {
+      const inWeek = all.filter((p) => WEEKS[i][1].includes(p.topic));
+      if (inWeek.some((p) => !isDone(statusOf(p.id)))) { cur = i; break; }
+    }
+    const next = $("next");
+    if (cur === WEEKS.length) {
+      next.innerHTML = `<span class="label">All 8 weeks done</span><span>Mark problems as <b>Revise</b> to come back to them before interviews.</span>`;
+    } else {
+      const order = WEEKS[cur][1];
+      const candidates = all.filter((p) => order.includes(p.topic) && !isDone(statusOf(p.id)))
+        .sort((a, b) => order.indexOf(a.topic) - order.indexOf(b.topic));
+      const p = candidates.find((x) => statusOf(x.id) === "attempted") || candidates[0];
+      const link = p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)} ↗</a>` : `<b>${esc(p.title)}</b>`;
+      next.innerHTML = `<span class="label">Next up · Week ${cur + 1}</span>${link}<span class="meta">${p.lc ? `<span class="mono">LC ${p.lc}</span>` : ""}<span class="diff" data-d="${p.diff}">${DIFFS[p.diff]}</span><span>${esc(topicName[p.topic])}</span></span>`;
+    }
+    renderWeeks(all, cur);
+  }
+
+  function renderWeeks(all, cur) {
+    $("weeks").innerHTML = WEEKS.map(([title, ts], i) => {
+      const inWeek = all.filter((p) => ts.includes(p.topic));
+      const d = inWeek.filter((p) => isDone(statusOf(p.id))).length;
+      const pct = inWeek.length ? (d / inWeek.length) * 100 : 0;
+      const pressed = filter.label === "Week " + (i + 1);
+      return `<button type="button" class="week${i === cur ? " current" : ""}" data-week="${i}" aria-pressed="${pressed}">
+        <span class="wk"><span>W${i + 1}</span>${pct === 100 ? "<em>✓</em>" : `<span>${d}/${inWeek.length}</span>`}</span>
+        <span class="wt">${esc(title)}</span>
+        <span class="bar"><i style="width:${pct}%"></i></span></button>`;
+    }).join("");
+  }
+
+  function renderTopics(all) {
+    $("topics").innerHTML = TOPICS.map((t) => {
+      const inT = all.filter((p) => p.topic === t.id);
+      const d = inT.filter((p) => isDone(statusOf(p.id))).length;
+      const pct = inT.length ? (d / inT.length) * 100 : 0;
+      const pressed = filter.label === t.name;
+      return `<button type="button" class="topic" data-topic="${t.id}" aria-pressed="${pressed}">
+        <span>${esc(t.name)}</span><span class="bar"><i style="width:${pct}%"></i></span><span class="n mono">${d}/${inT.length}</span></button>`;
+    }).join("");
+  }
+
+  function renderHeat(perDay) {
+    const end = new Date();
+    const dow = (end.getDay() + 6) % 7; // Monday = 0
+    const start = new Date(end);
+    start.setDate(end.getDate() - dow - 7 * 11);
+    $("heat-start").textContent = start.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    const cells = [];
+    const t = today();
+    for (let i = 0; i < 84; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      const k = dayKey(d);
+      if (d > end) { cells.push(`<i style="visibility:hidden"></i>`); continue; }
+      const n = perDay[k] || 0;
+      const l = n === 0 ? 0 : n === 1 ? 1 : n <= 3 ? 2 : 3;
+      cells.push(`<i data-l="${l}" class="${k === t ? "today" : ""}" title="${k}: ${n} solved"></i>`);
+    }
+    $("heat").innerHTML = cells.join("");
+  }
+
+  function renderChips() {
+    const st = [["all", "All"]].concat(STATUSES);
+    $("status-chips").innerHTML = st.map(([v, l]) => `<button type="button" class="chip" data-status="${v}" aria-pressed="${filter.status === v}">${l}</button>`).join("");
+    const df = [["all", "Any level"], ["E", "Easy"], ["M", "Medium"], ["H", "Hard"]];
+    $("diff-chips").innerHTML = df.map(([v, l]) => `<button type="button" class="chip" data-diff="${v}" aria-pressed="${filter.diff === v}">${l}</button>`).join("");
+    const note = $("filter-note");
+    note.hidden = !filter.topics;
+    if (filter.topics) note.innerHTML = `Showing <b>${esc(filter.label)}</b> <button type="button" class="linkbtn" id="clear-topic">Show all topics</button>`;
+  }
+
+  function matches(p) {
+    if (filter.topics && !filter.topics.includes(p.topic)) return false;
+    if (filter.status !== "all" && statusOf(p.id) !== filter.status) return false;
+    if (filter.diff !== "all" && p.diff !== filter.diff) return false;
+    if (filter.q) {
+      const q = filter.q.toLowerCase();
+      if (!p.title.toLowerCase().includes(q) && String(p.lc || "") !== q.replace(/^lc\s*/, "")) return false;
+    }
+    return true;
+  }
+
+  function rowHtml(p) {
+    const r = progress[p.id] || {};
+    const s = statusOf(p.id);
+    const ro = mode === "readonly" || mode === "loading";
+    const open = openNotes.has(p.id);
+    const opts = STATUSES.map(([v, l]) => `<option value="${v}"${v === s ? " selected" : ""}>${l}</option>`).join("");
+    const hasNote = !!(r.notes && r.notes.trim());
+    return `<div class="row" data-id="${esc(p.id)}" data-status="${s}">
+      <select class="status" data-s="${s}" aria-label="Status of ${esc(p.title)}" ${ro ? "disabled" : ""}>${opts}</select>
+      <div>
+        <div class="title">${esc(p.title)}</div>
+        <div class="meta">${p.lc ? `<span class="mono">LC ${esc(p.lc)}</span>` : ""}<span class="diff" data-d="${p.diff}">${DIFFS[p.diff]}</span>${r.solvedOn && isDone(s) ? `<span>solved ${esc(r.solvedOn)}</span>` : ""}${p.custom ? "<span>added by you</span>" : ""}</div>
+      </div>
+      <div class="acts">
+        ${p.url ? `<a class="act" href="${esc(p.url)}" target="_blank" rel="noopener">LeetCode ↗</a>` : ""}
+        ${p.solution ? `<a class="act" href="${esc(p.solution)}" target="_blank" rel="noopener">Solution ↗</a>` : ""}
+        <button type="button" class="act${hasNote ? " has-note" : ""}" data-notes aria-expanded="${open}">${hasNote ? "Notes •" : "Notes"}</button>
+      </div>
+      ${open ? `<div class="notes">
+        <label class="label" for="n-${esc(p.id)}">Your notes: approach, mistakes, things to remember</label>
+        <textarea id="n-${esc(p.id)}" data-note ${ro ? "readonly" : ""} placeholder="e.g. Use a HashMap of value to index; check the complement before inserting.">${esc(r.notes || "")}</textarea>
+        ${p.custom && !ro ? `<button type="button" class="act danger" data-remove="${esc(p.docId)}">Remove this problem</button>` : ""}
+      </div>` : ""}
+    </div>`;
+  }
+
+  function renderList(all) {
+    if (document.activeElement && document.activeElement.matches && document.activeElement.matches("textarea[data-note]")) {
+      listDirty = true; // don't replace the textarea while someone types in it
+      return;
+    }
+    listDirty = false;
+    const groups = TOPICS.map((t) => [t, all.filter((p) => p.topic === t.id && matches(p))]).filter(([, ps]) => ps.length);
+    if (!groups.length) {
+      $("list").innerHTML = `<p class="empty">No problems match these filters.</p>`;
+      return;
+    }
+    $("list").innerHTML = groups.map(([t, ps]) => {
+      const inT = all.filter((p) => p.topic === t.id);
+      const d = inT.filter((p) => isDone(statusOf(p.id))).length;
+      return `<section class="group"><div class="group-head"><h3>${esc(t.name)}</h3><span class="mono">Week ${weekOf[t.id]} · ${d}/${inT.length}</span></div>${ps.map(rowHtml).join("")}</section>`;
+    }).join("");
+  }
+
+  function renderAll() {
+    const all = allProblems();
+    renderSummary(all);
+    renderTopics(all);
+    renderChips();
+    renderList(all);
+    refreshSync();
+  }
+
+  // ---- events ----
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest("button");
+    if (!t) return;
+    if (t.dataset.status) { filter.status = t.dataset.status; renderAll(); }
+    else if (t.dataset.diff) { filter.diff = t.dataset.diff; renderAll(); }
+    else if (t.dataset.week) {
+      const i = +t.dataset.week;
+      const label = "Week " + (i + 1);
+      if (filter.label === label) { filter.topics = null; filter.label = ""; }
+      else { filter.topics = WEEKS[i][1]; filter.label = label; }
+      renderAll();
+    } else if (t.dataset.topic) {
+      const name = topicName[t.dataset.topic];
+      if (filter.label === name) { filter.topics = null; filter.label = ""; }
+      else { filter.topics = [t.dataset.topic]; filter.label = name; }
+      renderAll();
+      if (window.matchMedia("(max-width: 959px)").matches) $("q").scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (t.id === "clear-topic") { filter.topics = null; filter.label = ""; renderAll(); }
+    else if (t.hasAttribute("data-notes")) {
+      const id = t.closest(".row").dataset.id;
+      if (openNotes.has(id)) openNotes.delete(id); else openNotes.add(id);
+      renderAll();
+      if (openNotes.has(id)) { const ta = document.getElementById("n-" + id); if (ta) ta.focus(); }
+    } else if (t.dataset.remove) {
+      if (t.dataset.confirm) removeCustom(t.dataset.remove);
+      else {
+        t.dataset.confirm = "1";
+        t.textContent = "Tap again to remove";
+        setTimeout(() => { if (t.isConnected) { delete t.dataset.confirm; t.textContent = "Remove this problem"; } }, 3000);
+      }
+    }
+  });
+
+  document.addEventListener("change", (e) => {
+    if (e.target.matches("select.status")) setStatus(e.target.closest(".row").dataset.id, e.target.value);
+  });
+  document.addEventListener("input", (e) => {
+    if (e.target.matches("textarea[data-note]")) setNotes(e.target.closest(".row").dataset.id, e.target.value, false);
+  });
+  document.addEventListener("focusout", (e) => {
+    if (e.target.matches("textarea[data-note]")) {
+      const id = e.target.closest(".row").dataset.id;
+      if (noteTimers[id]) { clearTimeout(noteTimers[id]); noteTimers[id] = null; writeProgress(id); }
+      setTimeout(() => { if (listDirty) renderAll(); else renderSummary(allProblems()); renderTopics(allProblems()); }, 0);
+    }
+  });
+
+  let qTimer;
+  $("q").addEventListener("input", (e) => {
+    clearTimeout(qTimer);
+    qTimer = setTimeout(() => { filter.q = e.target.value.trim(); renderList(allProblems()); }, 120);
+  });
+
+  $("f-topic").innerHTML = TOPICS.map((t) => `<option value="${t.id}">${esc(t.name)}</option>`).join("");
+  $("add-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const err = $("f-err");
+    const title = $("f-title").value.trim();
+    const lcRaw = $("f-lc").value.trim();
+    const url = $("f-url").value.trim();
+    err.hidden = true;
+    if (mode === "readonly" || mode === "loading") { err.textContent = "You can't add problems in view-only mode."; err.hidden = false; return; }
+    if (!title) { err.textContent = "Enter a problem name."; err.hidden = false; return; }
+    if (lcRaw && !/^\d{1,5}$/.test(lcRaw)) { err.textContent = "The LeetCode number should be digits only, like 994."; err.hidden = false; return; }
+    if (url && !/^https?:\/\//i.test(url)) { err.textContent = "Links must start with https://"; err.hidden = false; return; }
+    addCustom({ title, topic: $("f-topic").value, diff: $("f-diff").value, lc: lcRaw ? +lcRaw : null, url: url || null, createdAt: Date.now() });
+    $("f-title").value = ""; $("f-lc").value = ""; $("f-url").value = "";
+  });
+
+  // ---- boot ----
+  renderAll();
+
+  (async () => {
+    const api = window.claude && typeof window.claude.use === "function" ? window.claude : null;
+    const [dbNs, user] = api ? await Promise.all([api.use("db").catch(() => null), api.use("user").catch(() => null)]) : [null, null];
+    if (!dbNs) {
+      mode = "local";
+      loadLocal();
+      renderAll();
+      return;
+    }
+    db = dbNs;
+    let owner = true;
+    if (user) { try { owner = await user.isOwner(); } catch (e) { owner = true; } }
+    mode = owner ? "db" : "readonly";
+    const onErr = (e) => {
+      if (e && e.code === "revoked") { mode = "readonly"; renderAll(); }
+      else setSync("error", "Lost connection to your saved progress. Reload the page.");
+    };
+    db.collection("progress").onSnapshot((snap) => {
+      const next = {};
+      snap.docs.forEach((d) => { if (d.exists) next[d.id] = Object.assign({}, d.data()); });
+      // keep a note that is still being typed locally
+      for (const id in noteTimers) if (noteTimers[id] && progress[id]) next[id] = Object.assign({}, next[id], { notes: progress[id].notes });
+      progress = next;
+      renderAll();
+    }, onErr);
+    db.collection("custom").onSnapshot((snap) => {
+      const next = {};
+      snap.docs.forEach((d) => { if (d.exists) next[d.id] = Object.assign({}, d.data()); });
+      custom = next;
+      renderAll();
+    }, onErr);
+    renderAll();
+  })();
+})();
+</script>
